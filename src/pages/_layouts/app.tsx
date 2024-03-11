@@ -7,7 +7,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <div className="p-8">
+      <div className="px-8 py-4">
         <Outlet />
       </div>
     </div>

@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
 import { Helmet } from 'react-helmet-async'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import * as zod from 'zod'
 
+import { signIn } from '@/api/requests/sign-in'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +18,9 @@ const signInSchema = zod.object({
 type SignInForm = zod.infer<typeof signInSchema>
 
 export default function SignIn() {
-  const defaultValues = { email: '' }
+  const [searchParams] = useSearchParams()
+
+  const defaultValues = { email: searchParams.get('email') ?? '' }
   const resolver = zodResolver(signInSchema)
   const {
     register,
@@ -24,11 +28,13 @@ export default function SignIn() {
     formState: { isSubmitting },
   } = useForm<SignInForm>({ defaultValues, resolver })
 
+  const { mutateAsync: authenticate } = useMutation({
+    mutationFn: signIn,
+  })
+
   const handleSignIn = async (data: SignInForm) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      console.log(data)
+      await authenticate(data)
 
       toast.success('Enviamos um link de autenticação para seu e-mail.', {
         action: {
@@ -45,7 +51,7 @@ export default function SignIn() {
     <>
       <Helmet title="Login" />
       <div className="p-8">
-        <Button asChild variant="link" className="absolute right-8 top-8">
+        <Button asChild variant="ghost" className="absolute right-8 top-8">
           <Link to="/sign-up">Novo estabelecimento</Link>
         </Button>
 

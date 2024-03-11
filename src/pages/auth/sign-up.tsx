@@ -1,17 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
 import { Helmet } from 'react-helmet-async'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import * as zod from 'zod'
 
+import { signUp } from '@/api/requests/sign-up'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const signUpSchema = zod.object({
   email: zod.string().email(),
-  cellphone: zod.string().min(11),
+  phone: zod.string().min(11),
   managerName: zod.string().min(3),
   restaurantName: zod.string().min(3),
 })
@@ -19,8 +21,13 @@ const signUpSchema = zod.object({
 type SignUpForm = zod.infer<typeof signUpSchema>
 
 export default function SignUp() {
-  const defaultValues = { email: '' }
   const resolver = zodResolver(signUpSchema)
+  const defaultValues = {
+    email: '',
+    phone: '',
+    managerName: '',
+    restaurantName: '',
+  }
   const {
     register,
     handleSubmit,
@@ -29,16 +36,18 @@ export default function SignUp() {
 
   const navigate = useNavigate()
 
+  const { mutateAsync: createNewAccount } = useMutation({
+    mutationFn: signUp,
+  })
+
   const handleSignUp = async (data: SignUpForm) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      console.log(data)
+      await createNewAccount(data)
 
       toast.success('Restaurante cadastrado com sucesso', {
         action: {
           label: 'Login',
-          onClick: () => navigate('/sign-in'),
+          onClick: () => navigate(`/sign-in?email=${data.email}`),
         },
       })
     } catch (error) {
@@ -50,7 +59,7 @@ export default function SignUp() {
     <>
       <Helmet title="Cadastre-se" />
       <div className="p-8">
-        <Button asChild variant="link" className="absolute right-8 top-8">
+        <Button asChild variant="ghost" className="absolute right-8 top-8">
           <Link to="/sign-in">Fazer login</Link>
         </Button>
 
@@ -84,12 +93,12 @@ export default function SignUp() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cellphone">Seu celular</Label>
+              <Label htmlFor="phone">Seu celular</Label>
               <Input
-                id="cellphone"
+                id="phone"
                 placeholder="(XX) XXXXX-XXXX"
                 type="tel"
-                {...register('cellphone')}
+                {...register('phone')}
               />
             </div>
 
